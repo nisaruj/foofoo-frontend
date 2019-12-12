@@ -6,7 +6,7 @@ An IoT air purifier made by STM32 & NodeMCU. This is a part of Embedded System L
 
 ``` bash
 # clone the repo
-$ git clone https://github.com/coreui/coreui-free-react-admin-template.git my-project
+$ git clone https://github.com/nisaruj/foofoo-frontend.git my-project
 
 # go into app's directory
 $ cd my-project
