@@ -257,12 +257,12 @@ class Dashboard extends Component {
                 <Row className="text-center">
                   <Col sm={12} md className="mb-sm-2 mb-0">
                     <div className="text-muted">Average PM2.5</div>
-                    <strong>29.703 Users (40%)</strong>
+                    <strong>29.703 (40%)</strong>
                     <Progress className="progress-xs mt-2" color="success" value="40" />
                   </Col>
                   <Col sm={12} md className="mb-sm-2 mb-0 d-md-down-none">
                     <div className="text-muted">CPU Usage</div>
-                    <strong>24.093 Users (20%)</strong>
+                    <strong>24.093 (20%)</strong>
                     <Progress className="progress-xs mt-2" color="info" value="20" />
                   </Col>
                 </Row>
