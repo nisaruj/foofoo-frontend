@@ -1,4 +1,4 @@
-import React, { Component, lazy, Suspense, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Col,
   Row,
@@ -6,13 +6,27 @@ import {
   ListGroupItem
 } from 'reactstrap';
 import { AppSwitch } from '@coreui/react'
+import { fetchFanState, toggleAuto, toggleFan } from '../../api/dashboard'
 
 export default () => {
-  const [isAuto, setAuto] = useState(true)
+  const [isAuto, setAuto] = useState(false)
   const [isOpen, setOpen] = useState(false)
 
-  const toggleAuto = () => setAuto(!isAuto)
-  const toggleOpen = () => setOpen(!isOpen)
+  const toggleAutoState = () => {
+    toggleAuto()
+      .then(() => setAuto(!isAuto))
+  }
+  const toggleOpenState = () => {
+    toggleFan()
+      .then(() => setOpen(!isOpen))
+  }
+
+  useEffect(() => {
+    fetchFanState().then(fanState => {
+      if (fanState === 'auto') setAuto(true)
+      else setOpen(fanState)
+    })
+  }, [])
 
   return (
     <div className="animated fadeIn">
@@ -26,12 +40,12 @@ export default () => {
         <Col>
           <ListGroup>
             <ListGroupItem>
-              Auto open air purifier when PM2.5 level reach the threshold
-                <AppSwitch className="float-right" label color="success" onClick={toggleAuto} checked={isAuto} />
+              Auto mode
+                <AppSwitch className="float-right" label color="success" onClick={toggleAutoState} checked={isAuto} />
             </ListGroupItem>
             <ListGroupItem>
               Open air purifier manually
-                <AppSwitch className="float-right" label color="success" onClick={toggleOpen} disabled={isAuto} checked={isOpen} />
+                <AppSwitch className="float-right" label color="success" onClick={toggleOpenState} disabled={isAuto} checked={isOpen} />
             </ListGroupItem>
           </ListGroup>
         </Col>

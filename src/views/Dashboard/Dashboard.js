@@ -1,153 +1,24 @@
-import React, { Component, lazy, Suspense } from 'react';
-import { Bar, Line } from 'react-chartjs-2';
+import React, { useState, useEffect, useRef } from 'react';
+import { Line } from 'react-chartjs-2';
 import {
-  Badge,
-  Button,
-  ButtonDropdown,
-  ButtonGroup,
-  ButtonToolbar,
   Card,
   CardBody,
-  CardFooter,
-  CardHeader,
   CardTitle,
   Col,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownToggle,
-  Progress,
   Row,
-  Table,
 } from 'reactstrap';
 import { CustomTooltips } from '@coreui/coreui-plugin-chartjs-custom-tooltips';
 import { getStyle, hexToRgba } from '@coreui/coreui/dist/js/coreui-utilities'
+import { fetchData } from '../../api/dashboard'
+import moment from 'moment'
 
-const brandPrimary = getStyle('--primary')
+// const brandPrimary = getStyle('--primary')
 const brandSuccess = getStyle('--success')
 const brandInfo = getStyle('--info')
-const brandWarning = getStyle('--warning')
+// const brandWarning = getStyle('--warning')
 const brandDanger = getStyle('--danger')
 
-// Social Box Chart
-const socialBoxData = [
-  { data: [65, 59, 84, 84, 51, 55, 40], label: 'facebook' },
-  { data: [1, 13, 9, 17, 34, 41, 38], label: 'twitter' },
-  { data: [78, 81, 80, 45, 34, 12, 40], label: 'linkedin' },
-  { data: [35, 23, 56, 22, 97, 23, 64], label: 'google' },
-];
-
-const makeSocialBoxData = (dataSetNo) => {
-  const dataset = socialBoxData[dataSetNo];
-  const data = {
-    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-    datasets: [
-      {
-        backgroundColor: 'rgba(255,255,255,.1)',
-        borderColor: 'rgba(255,255,255,.55)',
-        pointHoverBackgroundColor: '#fff',
-        borderWidth: 2,
-        data: dataset.data,
-        label: dataset.label,
-      },
-    ],
-  };
-  return () => data;
-};
-
-// sparkline charts
-const sparkLineChartData = [
-  {
-    data: [35, 23, 56, 22, 97, 23, 64],
-    label: 'New Clients',
-  },
-  {
-    data: [65, 59, 84, 84, 51, 55, 40],
-    label: 'Recurring Clients',
-  },
-  {
-    data: [35, 23, 56, 22, 97, 23, 64],
-    label: 'Pageviews',
-  },
-  {
-    data: [65, 59, 84, 84, 51, 55, 40],
-    label: 'Organic',
-  },
-  {
-    data: [78, 81, 80, 45, 34, 12, 40],
-    label: 'CTR',
-  },
-  {
-    data: [1, 13, 9, 17, 34, 41, 38],
-    label: 'Bounce Rate',
-  },
-];
-
-const makeSparkLineData = (dataSetNo, variant) => {
-  const dataset = sparkLineChartData[dataSetNo];
-  const data = {
-    labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-    datasets: [
-      {
-        backgroundColor: 'transparent',
-        borderColor: variant ? variant : '#c2cfd6',
-        data: dataset.data,
-        label: dataset.label,
-      },
-    ],
-  };
-  return () => data;
-};
-
 // Main Chart
-
-//Random Numbers
-function random(min, max) {
-  return Math.floor(Math.random() * (max - min + 1) + min);
-}
-
-var elements = 27;
-var data1 = [];
-var data2 = [];
-var data3 = [];
-
-for (var i = 0; i <= elements; i++) {
-  data1.push(random(50, 200));
-  data2.push(random(80, 100));
-  data3.push(65);
-}
-
-const mainChart = {
-  labels: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
-  datasets: [
-    {
-      label: 'My First dataset',
-      backgroundColor: hexToRgba(brandInfo, 10),
-      borderColor: brandInfo,
-      pointHoverBackgroundColor: '#fff',
-      borderWidth: 2,
-      data: data1,
-    },
-    {
-      label: 'My Second dataset',
-      backgroundColor: 'transparent',
-      borderColor: brandSuccess,
-      pointHoverBackgroundColor: '#fff',
-      borderWidth: 2,
-      data: data2,
-    },
-    {
-      label: 'My Third dataset',
-      backgroundColor: 'transparent',
-      borderColor: brandDanger,
-      pointHoverBackgroundColor: '#fff',
-      borderWidth: 1,
-      borderDash: [8, 5],
-      data: data3,
-    },
-  ],
-};
-
 const mainChartOpts = {
   tooltips: {
     enabled: false,
@@ -163,7 +34,7 @@ const mainChartOpts = {
   },
   maintainAspectRatio: false,
   legend: {
-    display: false,
+    display: true,
   },
   scales: {
     xAxes: [
@@ -176,9 +47,9 @@ const mainChartOpts = {
       {
         ticks: {
           beginAtZero: true,
-          maxTicksLimit: 5,
-          stepSize: Math.ceil(250 / 5),
-          max: 250,
+          // maxTicksLimit: 5,
+          stepSize: Math.ceil(30 / 5),
+          max: 30,
         },
       }],
   },
@@ -192,53 +63,98 @@ const mainChartOpts = {
   },
 };
 
-class Dashboard extends Component {
-  constructor(props) {
-    super(props);
+const Dashboard = () => {
+  const [pm25, setPm25] = useState([])
+  const [pm10, setPm10] = useState([])
+  const [labels, setLabels] = useState([])
 
-    this.toggle = this.toggle.bind(this);
-    this.onRadioBtnClick = this.onRadioBtnClick.bind(this);
-
-    this.state = {
-      dropdownOpen: false,
-      radioSelected: 1,
-    };
+  const getData = () => {
+    fetchData(50).then(data => {
+      let newPm25 = [], newPm10 = [], newLabels = []
+      for (let i in data) {
+        newPm25.push(data[i].pm25)
+        newPm10.push(data[i].pm10)
+        newLabels.push(moment(data[i].timestamp).format('H:mm:ss'))
+      }
+      setPm25(newPm25.reverse())
+      setPm10(newPm10.reverse())
+      setLabels(newLabels.reverse())
+    })
   }
 
-  toggle() {
-    this.setState({
-      dropdownOpen: !this.state.dropdownOpen,
-    });
+  const useInterval = (callback, delay) => {
+    const savedCallback = useRef();
+  
+    // Remember the latest callback.
+    useEffect(() => {
+      savedCallback.current = callback;
+    }, [callback]);
+  
+    // Set up the interval.
+    useEffect(() => {
+      function tick() {
+        savedCallback.current();
+      }
+      if (delay !== null) {
+        let id = setInterval(tick, delay);
+        return () => clearInterval(id);
+      }
+    }, [delay]);
   }
 
-  onRadioBtnClick(radioSelected) {
-    this.setState({
-      radioSelected: radioSelected,
-    });
-  }
+  useEffect(() => getData(), [])
 
-  loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
+  useInterval(() => getData(), 3000)
 
-  render() {
+  const mainChart = {
+    labels,
+    datasets: [
+      {
+        label: 'PM 2.5',
+        backgroundColor: hexToRgba(brandInfo, 10),
+        borderColor: brandInfo,
+        pointHoverBackgroundColor: '#fff',
+        borderWidth: 2,
+        data: pm25,
+      },
+      {
+        label: 'PM 10',
+        backgroundColor: 'transparent',
+        borderColor: brandSuccess,
+        pointHoverBackgroundColor: '#fff',
+        borderWidth: 2,
+        data: pm10,
+      },
+      {
+        label: 'Threshold',
+        backgroundColor: 'transparent',
+        borderColor: brandDanger,
+        pointHoverBackgroundColor: '#fff',
+        borderWidth: 1,
+        borderDash: [8, 5],
+        data: Array(50).fill(18),
+      },
+    ],
+  };
 
-    return (
-      <div className="animated fadeIn">
-        <Row>
-          <Col>
-            <h1>FooFoo Smart Air Purifier</h1>
-          </Col>
-        </Row>
+  return (
+    <div className="animated fadeIn">
+      <Row>
+        <Col>
+          <h1>FooFoo Smart Air Purifier</h1>
+        </Col>
+      </Row>
 
-        <Row>
-          <Col>
-            <Card>
-              <CardBody>
-                <Row>
-                  <Col sm="5">
-                    <CardTitle className="mb-0">PM 2.5</CardTitle>
-                    <div className="small text-muted">Recent PM 2.5 Level</div>
-                  </Col>
-                  <Col sm="7" className="d-none d-sm-inline-block">
+      <Row>
+        <Col>
+          <Card>
+            <CardBody>
+              <Row>
+                <Col sm="5">
+                  <CardTitle className="mb-0">PM 2.5</CardTitle>
+                  <div className="small text-muted">Recent PM 2.5 Level</div>
+                </Col>
+                {/* <Col sm="7" className="d-none d-sm-inline-block">
                     <Button color="primary" className="float-right"><i className="icon-cloud-download"></i></Button>
                     <ButtonToolbar className="float-right" aria-label="Toolbar with button groups">
                       <ButtonGroup className="mr-3" aria-label="First group">
@@ -247,13 +163,13 @@ class Dashboard extends Component {
                         <Button color="outline-secondary" onClick={() => this.onRadioBtnClick(3)} active={this.state.radioSelected === 3}>1 Hr</Button>
                       </ButtonGroup>
                     </ButtonToolbar>
-                  </Col>
-                </Row>
-                <div className="chart-wrapper" style={{ height: 300 + 'px', marginTop: 40 + 'px' }}>
-                  <Line data={mainChart} options={mainChartOpts} height={300} />
-                </div>
-              </CardBody>
-              <CardFooter>
+                  </Col> */}
+              </Row>
+              <div className="chart-wrapper" style={{ height: 300 + 'px', marginTop: 40 + 'px' }}>
+                <Line data={mainChart} options={mainChartOpts} height={300} />
+              </div>
+            </CardBody>
+            {/* <CardFooter>
                 <Row className="text-center">
                   <Col sm={12} md className="mb-sm-2 mb-0">
                     <div className="text-muted">Average PM2.5</div>
@@ -266,13 +182,12 @@ class Dashboard extends Component {
                     <Progress className="progress-xs mt-2" color="info" value="20" />
                   </Col>
                 </Row>
-              </CardFooter>
-            </Card>
-          </Col>
-        </Row>
-      </div>
-    );
-  }
+              </CardFooter> */}
+          </Card>
+        </Col>
+      </Row>
+    </div>
+  );
 }
 
 export default Dashboard;
